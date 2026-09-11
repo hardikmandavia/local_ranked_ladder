@@ -1,0 +1,15 @@
+{
+  "name": "local-ranked-ladder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "read": "node scripts/read-leaderboard.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
