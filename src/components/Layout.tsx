@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useLeagueState } from "../data/useLeague";
 import { formatDate } from "../data/derive";
@@ -9,6 +9,12 @@ const NAV = [
   { to: "/matchups", label: "Matchups", icon: "M3 3h6v6H3zm8 0h6v6h-6zM3 11h6v6H3zm8 0h6v6h-6z" },
   { to: "/legends", label: "Legends", icon: "M10 2a4 4 0 110 8 4 4 0 010-8zm-7 15a7 7 0 0114 0z" },
 ];
+
+const CREDITS = {
+  dataBy: "Daniel Newton",
+  appStore: "https://apps.apple.com/us/app/solorift/id6806668813",
+  googlePlay: "https://play.google.com/store/apps/details?id=com.hiddenmangoltd.solorift&pcampaignid=web_share",
+};
 
 const TITLES: Record<string, string> = {
   "/": "Leaderboard",
@@ -47,7 +53,7 @@ export function Layout() {
 
   useEffect(() => {
     const page = TITLES[pathname];
-    document.title = page ? `${page} · Vendetta League` : "Vendetta League";
+    document.title = page ? `SoloRift - ${page}` : "SoloRift";
   }, [pathname]);
 
   const week = state.status === "ready" ? state.league.data : null;
@@ -58,11 +64,11 @@ export function Layout() {
         <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-3 py-2.5 sm:px-5">
           <NavLink to="/" className="flex min-w-0 items-center gap-2.5">
             <img
-              src={`${import.meta.env.BASE_URL}logo-mythic-goblin.png`}
+              src={`${import.meta.env.BASE_URL}logo-solorift.svg`}
               alt=""
               width={40}
               height={40}
-              className="size-10 shrink-0 object-contain"
+              className="size-10 shrink-0 rounded-lg object-contain"
             />
             <span className="min-w-0">
               <span className="block truncate font-display text-base font-semibold leading-tight sm:text-lg">Mythic Goblin · Riftbound</span>
@@ -116,6 +122,33 @@ export function Layout() {
             </button>
           </div>
         </div>
+
+        <div className="border-t border-app/60">
+          <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-x-4 gap-y-0.5 px-3 py-1 text-[11px] text-faint sm:px-5">
+            <span className="truncate">
+              Data by <span className="font-medium text-muted">{CREDITS.dataBy}</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5">
+                Powered by
+                <img
+                  src={`${import.meta.env.BASE_URL}logo-solorift.svg`}
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="size-4 rounded-[3px]"
+                />
+                <span className="font-semibold text-muted">SoloRift</span>
+              </span>
+              <StoreLink href={CREDITS.appStore} label="App Store">
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+              </StoreLink>
+              <StoreLink href={CREDITS.googlePlay} label="Google Play">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z" />
+              </StoreLink>
+            </span>
+          </div>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-2 pb-24 pt-4 sm:px-5 sm:pb-8">
@@ -155,6 +188,24 @@ export function Layout() {
         </ul>
       </nav>
     </div>
+  );
+}
+
+function StoreLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`SoloRift on the ${label}`}
+      title={`SoloRift on the ${label}`}
+      className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-muted transition-colors hover:bg-surface hover:text-app"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
+        {children}
+      </svg>
+      <span className="hidden sm:inline">{label}</span>
+    </a>
   );
 }
 
