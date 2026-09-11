@@ -57,13 +57,16 @@ export function Layout() {
       <header className="sticky top-0 z-30 border-b border-app bg-elev/95 backdrop-blur supports-[backdrop-filter]:bg-elev/80">
         <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-3 py-2.5 sm:px-5">
           <NavLink to="/" className="flex min-w-0 items-center gap-2.5">
-            <svg aria-hidden="true" viewBox="0 0 64 64" className="size-8 shrink-0">
-              <rect width="64" height="64" rx="14" fill="#0b0e14" />
-              <path d="M14 18h10l8 22 8-22h10L38 50H26z" fill="#e6b450" />
-            </svg>
+            <img
+              src={`${import.meta.env.BASE_URL}logo-mythic-goblin.png`}
+              alt=""
+              width={40}
+              height={40}
+              className="size-10 shrink-0 object-contain"
+            />
             <span className="min-w-0">
-              <span className="block truncate font-display text-base font-semibold leading-tight sm:text-lg">Vendetta League</span>
-              <span className="hidden text-[11px] uppercase tracking-wider text-faint sm:block">Mythic Goblin · Riftbound</span>
+              <span className="block truncate font-display text-base font-semibold leading-tight sm:text-lg">Mythic Goblin · Riftbound</span>
+              <span className="hidden text-[11px] uppercase tracking-wider text-faint sm:block">Vendetta League</span>
             </span>
           </NavLink>
 
