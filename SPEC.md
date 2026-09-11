@@ -9,8 +9,8 @@ A public, read-only, responsive website that visualises the "Mythic Goblin Riftb
 
 ## 2. Source data (as observed on 2026-09-10 snapshot)
 
-The workbook has 7 tabs; three (`Config`, `Match Results`, `Matchups`) are hidden sheets and are **out of scope for
-now** — the site reads only the four visible tabs below. (The hidden tabs are described in §10 for future reference.)
+The workbook has 7 tabs; three (`Config`, `Match Results`, `Matchups`) are hidden sheets. The site reads the four
+visible tabs below plus the hidden `Matchups` tab (added 2026-09-11 for per-cell match counts; see §10 for the others).
 
 | Tab | Shape | Notes |
 |---|---|---|
@@ -18,6 +18,7 @@ now** — the site reads only the four visible tabs below. (The hidden tabs are 
 | `Best Of Leaderboard` | 198 rows × 6 cols | `Legend, Player, Pts, Wks Att, Wks>5, Best Of`. **Already contains per-player weeks on each legend (`Wks Att`)**, so no derivation is needed for that. The sheet's own `Best Of = YES` flag ignores eligibility and has ties (46 YES across 40 legends) — the site computes its own. |
 | `Matchups Grid` | pivot, 36 row legends × 39 column legends | `.` = no data. Asymmetric: Lux, Shen, Volibear, Zed have columns but no rows. No match counts. |
 | `Legend Winrates` | 40 rows × 3 cols | `Legend, Winrate (fraction), Matches`. |
+| `Matchups` (hidden) | 305 rows × 4 cols | `Legend, Opponent Legend, Matches, Win %`, one row per legend pair (stored once). Fresher than the pivot: on the 2026-09-10 snapshot 6 pivot cells lagged these rows, so the matrix uses this tab as its source and the pivot only as a fallback. |
 
 Legend names are plain (e.g. `Akali`) except `Master Yi, Wuju Bladesman`. 40 legends appear in Best Of; 39/36 in the grid.
 
@@ -95,7 +96,8 @@ interface LeagueData {
     ptsPerMatch: number; ptsPerWeek: number; played: number; wins: number; losses: number; draws: number;
   }[];
   bestOf: { legend: string; player: string; points: number; weeks: number }[];
-  matchupGrid: { rows: string[]; cols: string[]; cells: (number | null)[][] }; // from the pivot tab
+  matchupGrid: { rows: string[]; cols: string[]; cells: (number | null)[][] }; // from the pivot tab (fallback)
+  matchups?: { legend: string; opponent: string; matches: number; winRate: number }[]; // hidden Matchups tab
   legendWinrates: { legend: string; winRate: number; matches: number }[];
 }
 ```
@@ -154,17 +156,18 @@ first column, every cell shows win% large with match count small, cells coloured
 
 Spec:
 
-- Build the matrix from the **`Matchups Grid` pivot tab** as-is: row legend vs column legend, value = row legend's
-  win rate, `.` = no data. The tab has no per-cell match counts, so cells show win% only (no "N matches" line and no
-  sample-size fading, unlike riftdecks). Parsing: header row = first row whose cell B is non-empty; the `# of Matches
-  (All)` filter rows above it are skipped.
-- The pivot is asymmetric (36 row legends, 39 column legends; Lux, Shen, Volibear, Zed have no row). Render the axis
-  as the union of row and column legends (39); legends with no row are shown as **empty rows** (all `--`). No
-  mirroring.
+- Build the matrix from the hidden **`Matchups`** pair rows (win rate + match count per pair), falling back to the
+  **`Matchups Grid` pivot** for any cell the pairs don't cover (older snapshots without the tab). Cells show win%
+  with a small `N games` label underneath. Pivot parsing: header row = first row whose cell A is blank and cell B is
+  a legend name; the `# of Matches (All)` filter rows above it are skipped.
+- The pivot stores each legend pair **once** (upper triangle: the Nasus row only holds values vs legends after it;
+  36 row legends, 39 column legends; Lux, Shen, Volibear, Zed have no row). Render the axis as the union of row and
+  column legends and **mirror**: a missing `(A, B)` cell is filled with `1 − (B, A)`. Legends with no row get their
+  values entirely from mirroring.
 - Axis order selectable: by matches played (default, from `Legend Winrates`), by overall win rate, alphabetical.
 - First data column = **Overall** from `Legend Winrates` (win rate + matches).
-- Cell: `62%` (bold). Background: diverging scale centred on 50% (red → grey → green). Diagonal and missing = `--` on
-  neutral grey.
+- Cell: `62%` (bold) with `3 games` small underneath (omitted when only the pivot value is known). Background:
+  diverging scale centred on 50% (red → grey → green). Diagonal and missing = `--` on neutral grey.
 - Hover/tap tooltip: "Akali vs Ambessa · 67%". Row + column highlight on hover like the leaderboard.
 - Sticky header row and sticky first column; the table scrolls inside its container both ways on small screens.
   Portrait 32px, name truncated below it; on phones names show only on the sticky column and the header shows
@@ -226,7 +229,7 @@ public/legends/*.png, public/data/league.json
 | 6 | Portraits | Placeholders now; owner supplies an image folder later. Full legend names, never shortened. |
 | 7 | Leaderboard on phones | Hide `Pts/Ma` and `Pts/We` below 640px. |
 | 8 | Best Of tie-break | Points, then overall attendance, then shared medal; all shared-gold players shown on the card. |
-| 9 | Grid gaps | Legends with no row are rendered as empty rows. |
+| 9 | Grid gaps | Mirror the pivot: missing `(A, B)` = `1 − (B, A)` (changed 2026-09-11; was "no mirroring"). |
 | 10 | Constants | `totalWeeks = 11` hard-coded; `weeksRemaining = totalWeeks − currentWeek`. |
 | 11 | Refresh | Daily cron plus manual dispatch. |
 
@@ -238,5 +241,5 @@ with the file anyway, so enabling them later is a parsing change, not an access 
 - `Config` — key/value settings (`WorkbookPath`). A natural home for `TotalWeeks` / `MinWeeksForBestOf` (Q10).
 - `Match Results` — one row per match (week, round, both players' names, legends, game record, points; byes have an
   empty player 2). Would give an exact `currentWeek` (`max(Week number)`) and a match explorer page.
-- `Matchups` — long-form `Legend, Opponent, Matches, Win %`, one row per pair. Would give per-cell match counts and a
-  symmetric matrix, enabling riftdecks-style sample-size fading and a minimum-matches filter.
+- `Matchups` — now read (see §2). Per-cell counts are in; sample-size fading and a minimum-matches filter remain
+  possible follow-ups.

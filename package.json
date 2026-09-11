@@ -4,12 +4,32 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "read": "node scripts/read-leaderboard.mjs"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "read": "node scripts/read-leaderboard.mjs",
+    "refresh": "node scripts/read-leaderboard.mjs --out=public/data/league.json",
+    "test": "node --test scripts/*.test.mjs",
+    "portraits": "node scripts/sync-portraits.mjs",
+    "typecheck": "tsc -b"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.3",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9",
+    "vite": "^8.3.0"
   }
 }

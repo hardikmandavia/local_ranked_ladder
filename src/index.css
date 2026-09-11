@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+
+  --color-gold-300: #f2d488;
+  --color-gold-400: #e6b450;
+  --color-gold-500: #c9962f;
+  --color-teal-400: #3ec8c2;
+  --color-win: #34c47a;
+  --color-loss: #e5534b;
+  --color-draw: #8b93a7;
+}
+
+/* Theme tokens. Dark is the default; light is opt-in via data-theme="light". */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0e14;
+  --bg-elev: #12161f;
+  --surface: #171c27;
+  --surface-2: #1f2532;
+  --border: #283042;
+  --border-strong: #3a4459;
+  --text: #e7eaf0;
+  --text-muted: #98a1b5;
+  --text-faint: #6c7489;
+  --accent: #e6b450;
+  --accent-contrast: #14110a;
+  --hl-row: rgba(230, 180, 80, 0.18);
+  --hl-col: rgba(230, 180, 80, 0.18);
+  --hl-cell: rgba(230, 180, 80, 0.4);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f6f9;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eef0f5;
+  --border: #d9dde8;
+  --border-strong: #b9c0d1;
+  --text: #171b26;
+  --text-muted: #4e576c;
+  --text-faint: #8590a8;
+  --accent: #b07f1c;
+  --accent-contrast: #ffffff;
+  --hl-row: rgba(176, 127, 28, 0.14);
+  --hl-col: rgba(176, 127, 28, 0.14);
+  --hl-cell: rgba(176, 127, 28, 0.34);
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Tailwind v4's preflight resets buttons to cursor: default */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+select {
+  cursor: pointer;
+}
+
+@utility bg-app { background: var(--bg); }
+@utility bg-elev { background: var(--bg-elev); }
+@utility bg-surface { background: var(--surface); }
+@utility bg-surface-2 { background: var(--surface-2); }
+@utility border-app { border-color: var(--border); }
+@utility border-strong { border-color: var(--border-strong); }
+@utility text-app { color: var(--text); }
+@utility text-muted { color: var(--text-muted); }
+@utility text-faint { color: var(--text-faint); }
+@utility text-accent { color: var(--accent); }
+@utility bg-accent { background: var(--accent); color: var(--accent-contrast); }
+@utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
+@utility tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------- Tables ---------- */
+.tbl-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg-elev);
+  max-height: calc(100dvh - 11rem);
+}
+
+.tbl {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.875rem;
+}
+.tbl th,
+.tbl td {
+  padding: 0.5rem 0.625rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+  transition: background-color 80ms linear;
+}
+.tbl thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-strong);
+}
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.tbl tbody tr:hover td { background: var(--surface); }
+
+/* sticky columns: first column always, second on narrow screens */
+.tbl .sticky-1,
+.tbl .sticky-2 {
+  position: sticky;
+  z-index: 2;
+}
+.tbl .sticky-1 { left: 0; }
+.tbl .sticky-2 { left: var(--col1-w, 2.75rem); }
+.tbl thead .sticky-1,
+.tbl thead .sticky-2 { z-index: 4; }
+.tbl .sticky-2::after {
+  content: "";
+  position: absolute;
+  top: 0; right: -1px; bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+/* highlight state, driven by classes toggled from the useHighlight hook.
+   Inset box-shadows so the tint also shows over the matrix's coloured cells. */
+.tbl tr.hl-row > td,
+.tbl tr.hl-row > th { box-shadow: inset 0 0 0 9999px var(--hl-row); }
+.tbl td.hl-col,
+.tbl th.hl-col { box-shadow: inset 0 0 0 9999px var(--hl-col); }
+.tbl tr.hl-row > .hl-col { box-shadow: inset 0 0 0 9999px var(--hl-cell); }
+.tbl tr.hl-row > .hl-col.pinned { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tbl tr.hl-row > .sticky-1,
+.tbl tr.hl-row > .sticky-2 { background: var(--surface); }
+/* the legend picked in the matchups search */
+.tbl tr.focus-row > th.sticky-1 { box-shadow: inset 3px 0 0 var(--accent), inset 0 0 0 9999px var(--hl-row); }
+
+/* leaderboard: line under the tournament qualifiers */
+.tbl tr.qualify-divider td {
+  padding: 0.2rem 0.5rem;
+  border-top: 2px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  line-height: 1;
+}
+.tbl tr.qualify-divider td span {
+  position: sticky;
+  left: 0.5rem;
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* phone: tighter cells so the 8 leaderboard columns fit in 360px */
+@media (max-width: 639px) {
+  .tbl-scroll { max-height: calc(100dvh - 12.5rem); }
+  .tbl { font-size: 0.8125rem; }
+  .tbl th, .tbl td { padding: 0.45rem 0.3rem; }
+  .tbl thead th { font-size: 0.625rem; letter-spacing: 0.04em; }
+}
+
+/* matrix cells */
+.mx-scroll { --col1-w: 13rem; }
+.mx td, .mx th { padding: 0.35rem 0.4rem; text-align: center; }
+/* legend column has a fixed width so the Overall column can stick right after it */
+.mx .sticky-1 { width: var(--col1-w); min-width: var(--col1-w); max-width: var(--col1-w); box-sizing: border-box; }
+.mx .sticky-2 { min-width: 3.75rem; }
+@media (max-width: 639px) {
+  .mx-scroll { --col1-w: 9.25rem; }
+}
+.mx td.cell { font-weight: 700; font-variant-numeric: tabular-nums; cursor: default; }
+.mx td.cell.na { color: var(--text-faint); font-weight: 400; }
+
+/* ---------- Avatar ring ---------- */
+.ring-story {
+  background: conic-gradient(from 210deg, #f5c86a, #e6b450, #3ec8c2, #7c5cff, #e6b450, #f5c86a);
+  padding: 3px;
+  border-radius: 9999px;
+}
+
+/* ---------- Modal / sheet ---------- */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(3, 5, 9, 0.72);
+  backdrop-filter: blur(3px);
+  display: grid; place-items: center;
+  padding: 1rem;
+  z-index: 50;
+  animation: fade-in 120ms ease-out;
+}
+.sheet {
+  width: min(100%, 32rem);
+  max-height: min(90dvh, 44rem);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 1rem;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  animation: pop-in 140ms ease-out;
+}
+@media (max-width: 639px) {
+  .overlay { place-items: end center; padding: 0; }
+  .sheet {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 1.25rem 1.25rem 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: slide-up 180ms ease-out;
+  }
+}
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(0.98) } to { opacity: 1; transform: none } }
+@keyframes slide-up { from { transform: translateY(100%) } to { transform: none } }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .sheet, .tbl th, .tbl td { animation: none; transition: none; }
+}
+
+/* focus ring */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* bottom tab bar safe area */
+.tabbar { padding-bottom: env(safe-area-inset-bottom); }

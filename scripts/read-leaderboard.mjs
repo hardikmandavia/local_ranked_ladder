@@ -2,18 +2,23 @@
 // Reads a shared OneDrive Excel workbook through the Microsoft Graph API.
 //
 // Usage:
-//   node scripts/read-leaderboard.mjs [shareLink] [--json] [--sheet=NAME]
+//   node scripts/read-leaderboard.mjs [shareLink] [--json] [--sheet=NAME] [--out=public/data/league.json]
+//
+// --out writes the normalised LeagueData JSON used by the site (scripts/normalise.mjs)
+// instead of printing the sheets.
 //
 // Requires: npm install (for the xlsx parser).
 // Auth: anonymous access is attempted first. If OneDrive refuses it, set
 // MS_CLIENT_ID to an Entra app registration (personal accounts enabled,
 // "Allow public client flows" = yes) and follow the one-time device-code
 // sign-in. The refresh token is cached in .token-cache.json (gitignored).
+// In CI, set MS_REFRESH_TOKEN instead of relying on the cache file.
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import XLSX from "xlsx";
+import { normalise } from "./normalise.mjs";
 
 const DEFAULT_LINK =
   "https://1drv.ms/x/c/273f106030f84ede/IQAK5B8X3mvuTZ_KwLYExU_gAQkZFRLhVhbvBLhrPs8QEG0?e=ghw5U0";
@@ -66,7 +71,7 @@ async function readCache() {
   try {
     return JSON.parse(await readFile(TOKEN_CACHE, "utf8"));
   } catch {
-    return null;
+    return process.env.MS_REFRESH_TOKEN ? { refresh_token: process.env.MS_REFRESH_TOKEN } : null;
   }
 }
 
@@ -189,7 +194,16 @@ try {
   process.exit(1);
 }
 
-if (flags.json) {
+if (flags.out) {
+  const out = path.resolve(ROOT, String(flags.out));
+  const league = normalise(data);
+  await mkdir(path.dirname(out), { recursive: true });
+  await writeFile(out, JSON.stringify(league));
+  console.error(
+    `Wrote ${out}: week ${league.currentWeek}/${league.totalWeeks}, ` +
+      `${league.leaderboard.length} players, ${league.bestOf.length} best-of rows (modified ${league.lastModified})`
+  );
+} else if (flags.json) {
   console.log(JSON.stringify(data, null, 2));
 } else {
   console.log(`${data.file}  (modified ${data.lastModified})`);

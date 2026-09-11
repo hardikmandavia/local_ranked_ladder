@@ -2,3 +2,4 @@ node_modules/
 .token-cache.json
 leaderboard.json
 .env
+dist/
