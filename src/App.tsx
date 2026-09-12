@@ -5,6 +5,7 @@ import { Leaderboard } from "./pages/Leaderboard";
 import { BestOf } from "./pages/BestOf";
 import { Matchups } from "./pages/Matchups";
 import { Legends } from "./pages/Legends";
+import { AppInfo } from "./pages/AppInfo";
 
 const router = createBrowserRouter(
   [
@@ -16,6 +17,7 @@ const router = createBrowserRouter(
         { path: "best-of", element: <BestOf /> },
         { path: "matchups", element: <Matchups /> },
         { path: "legends", element: <Legends /> },
+        { path: "app", element: <AppInfo /> },
         { path: "*", element: <Leaderboard /> },
       ],
     },

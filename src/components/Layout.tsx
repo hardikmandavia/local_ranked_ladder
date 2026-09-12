@@ -8,7 +8,11 @@ const NAV = [
   { to: "/best-of", label: "Best Of", icon: "M10 2l2.4 5 5.6.7-4 3.9.9 5.6L10 14.5 5.1 17.2l.9-5.6-4-3.9L7.6 7z" },
   { to: "/matchups", label: "Matchups", icon: "M3 3h6v6H3zm8 0h6v6h-6zM3 11h6v6H3zm8 0h6v6h-6z" },
   { to: "/legends", label: "Legends", icon: "M10 2a4 4 0 110 8 4 4 0 010-8zm-7 15a7 7 0 0114 0z" },
+  { to: "/app", label: "Get SoloRift", icon: "M6 1h8a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V3a2 2 0 012-2zm0 2v12h8V3zm3 13.5h2v1H9z" },
 ];
+
+// Pages that don't depend on the league workbook render even while it loads or fails.
+const STATIC_PAGES = new Set(["/app"]);
 
 const CREDITS = {
   dataBy: "Daniel Newton",
@@ -21,6 +25,7 @@ const TITLES: Record<string, string> = {
   "/best-of": "Best Of",
   "/matchups": "Matchups",
   "/legends": "Legends",
+  "/app": "Get SoloRift",
 };
 
 type Theme = "dark" | "light";
@@ -57,6 +62,7 @@ export function Layout() {
   }, [pathname]);
 
   const week = state.status === "ready" ? state.league.data : null;
+  const isStatic = STATIC_PAGES.has(pathname);
 
   return (
     <div className="flex min-h-dvh flex-col bg-app text-app">
@@ -129,7 +135,7 @@ export function Layout() {
               Data by <span className="font-medium text-muted">{CREDITS.dataBy}</span>
             </span>
             <span className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5">
+              <NavLink to="/app" className="inline-flex items-center gap-1.5 rounded px-1 py-0.5 transition-colors hover:bg-surface hover:text-app">
                 Powered by
                 <img
                   src={`${import.meta.env.BASE_URL}logo-solorift.svg`}
@@ -139,7 +145,7 @@ export function Layout() {
                   className="size-4 rounded-[3px]"
                 />
                 <span className="font-semibold text-muted">SoloRift</span>
-              </span>
+              </NavLink>
               <StoreLink href={CREDITS.appStore} label="App Store">
                 <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
               </StoreLink>
@@ -152,9 +158,13 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-2 pb-24 pt-4 sm:px-5 sm:pb-8">
-        {state.status === "loading" && <Loading />}
-        {state.status === "error" && <LoadError error={state.error} lastSeen={state.lastSeen} />}
-        {state.status === "ready" && <Outlet />}
+        {isStatic || state.status === "ready" ? (
+          <Outlet />
+        ) : state.status === "loading" ? (
+          <Loading />
+        ) : (
+          <LoadError error={state.error} lastSeen={state.lastSeen} />
+        )}
       </main>
 
       <footer className="hidden border-t border-app px-5 py-4 text-center text-xs text-faint sm:block">
@@ -168,7 +178,7 @@ export function Layout() {
       </footer>
 
       <nav aria-label="Primary" className="tabbar fixed inset-x-0 bottom-0 z-30 border-t border-app bg-elev/95 backdrop-blur sm:hidden">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-5">
           {NAV.map((n) => (
             <li key={n.to}>
               <NavLink
