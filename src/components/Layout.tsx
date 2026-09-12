@@ -26,6 +26,14 @@ const TITLES: Record<string, string> = {
   "/legends": "Legends",
 };
 
+function safeDecode(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
 type Theme = "dark" | "light";
 
 function useTheme(): [Theme, () => void] {
@@ -56,7 +64,9 @@ export function Layout() {
 
   useEffect(() => {
     const page = TITLES[pathname];
-    document.title = page ? `SoloRift - ${page}` : "SoloRift";
+    const m = pathname.match(/^\/players\/(.+)$/);
+    const player = m ? safeDecode(m[1]) : null;
+    document.title = page ? `SoloRift - ${page}` : player ? `SoloRift - ${player}` : "SoloRift";
   }, [pathname]);
 
   const week = state.status === "ready" ? state.league.data : null;

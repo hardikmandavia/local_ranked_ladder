@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-// Copies legend portraits from assets/<Legend name>/portrait.png into
+// Copies legend portraits from assets/portraits/<Legend name>.png into
 // public/legends/<slug>.jpg, resized for the site (largest render is 72px at
 // 2× DPR). Uses macOS `sips`; re-run whenever assets/ changes.
 //
 //   node scripts/sync-portraits.mjs [--size=192]
 
-import { readdir, mkdir, stat } from "node:fs/promises";
+import { readdir, mkdir } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = path.join(ROOT, "assets");
+const SRC = path.join(ROOT, "assets", "portraits");
 const OUT = path.join(ROOT, "public", "legends");
 const size = Number(process.argv.find((a) => a.startsWith("--size="))?.slice(7) ?? 192);
 
@@ -31,21 +31,17 @@ const known = JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(pa
 const knownSlugs = new Set(Object.values(known));
 
 await mkdir(OUT, { recursive: true });
-const folders = (await readdir(SRC, { withFileTypes: true })).filter((d) => d.isDirectory()).map((d) => d.name);
+const files = (await readdir(SRC, { withFileTypes: true }))
+  .filter((d) => d.isFile() && d.name.endsWith(".png"))
+  .map((d) => d.name.slice(0, -".png".length));
 const written = new Set();
-for (const folder of folders) {
-  const src = path.join(SRC, folder, "portrait.png");
-  try {
-    await stat(src);
-  } catch {
-    console.warn(`skip ${folder}: no portrait.png`);
-    continue;
-  }
-  const s = slug(ALIASES[folder] ?? folder);
+for (const legend of files) {
+  const src = path.join(SRC, `${legend}.png`);
+  const s = slug(ALIASES[legend] ?? legend);
   const out = path.join(OUT, `${s}.jpg`);
   execFileSync("sips", ["-Z", String(size), "-s", "format", "jpeg", "-s", "formatOptions", "85", src, "--out", out], { stdio: "ignore" });
   written.add(s);
-  if (!knownSlugs.has(s)) console.warn(`note: ${folder} -> ${s}.jpg is not a legend in the league data yet`);
+  if (!knownSlugs.has(s)) console.warn(`note: ${legend} -> ${s}.jpg is not a legend in the league data yet`);
 }
 const missing = [...knownSlugs].filter((s) => !written.has(s));
 console.log(`wrote ${written.size} portraits to public/legends/`);

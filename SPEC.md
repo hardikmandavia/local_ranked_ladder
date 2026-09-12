@@ -10,7 +10,8 @@ A public, read-only, responsive website that visualises the "Mythic Goblin Riftb
 ## 2. Source data (as observed on 2026-09-10 snapshot)
 
 The workbook has 7 tabs; three (`Config`, `Match Results`, `Matchups`) are hidden sheets. The site reads the four
-visible tabs below plus the hidden `Matchups` tab (added 2026-09-11 for per-cell match counts; see §10 for the others).
+visible tabs below plus the hidden `Matchups` tab (added 2026-09-11 for per-cell match counts) and the hidden
+`Match Results` tab (added 2026-09-12 for per-player match history; see §10 for `Config`).
 
 | Tab | Shape | Notes |
 |---|---|---|
@@ -18,6 +19,7 @@ visible tabs below plus the hidden `Matchups` tab (added 2026-09-11 for per-cell
 | `Best Of Leaderboard` | 198 rows × 6 cols | `Legend, Player, Pts, Wks Att, Wks>5, Best Of`. **Already contains per-player weeks on each legend (`Wks Att`)**, so no derivation is needed for that. The sheet's own `Best Of = YES` flag ignores eligibility and has ties (46 YES across 40 legends) — the site computes its own. |
 | `Matchups Grid` | pivot, 36 row legends × 39 column legends | `.` = no data. Asymmetric: Lux, Shen, Volibear, Zed have columns but no rows. No match counts. |
 | `Legend Winrates` | 40 rows × 3 cols | `Legend, Winrate (fraction), Matches`. |
+| `Match Results` (hidden) | 556 rows × 12 cols | `Week number, Round number, Player 1 First Name, Player 1 Last Name, Player 1 Legend, Player 1 Round Record, Player 1 Points, Player 2 …` (same four). One row per match; `First Last` matches the Leaderboard's player names exactly. Record is the game score `W-L-D`; points are 3 / 1 / 0. Byes have an empty player 2 (`2-0-0`, 3 pts, counted as a win); a `0-0-0` / 0-pt row with no opponent is counted as a draw by the Leaderboard tab. |
 | `Matchups` (hidden) | 305 rows × 4 cols | `Legend, Opponent Legend, Matches, Win %`, one row per legend pair (stored once). Fresher than the pivot: on the 2026-09-10 snapshot 6 pivot cells lagged these rows, so the matrix uses this tab as its source and the pivot only as a fallback. |
 
 Legend names are plain (e.g. `Akali`) except `Master Yi, Wuju Bladesman`. 40 legends appear in Best Of; 39/36 in the grid.
@@ -99,6 +101,11 @@ interface LeagueData {
   matchupGrid: { rows: string[]; cols: string[]; cells: (number | null)[][] }; // from the pivot tab (fallback)
   matchups?: { legend: string; opponent: string; matches: number; winRate: number }[]; // hidden Matchups tab
   legendWinrates: { legend: string; winRate: number; matches: number }[];
+  matches?: {                 // hidden Match Results tab; absent in old snapshots
+    week: number; round: number;
+    p1: { player: string; legend: string; record: string; points: number };
+    p2: { player: string; legend: string; record: string; points: number } | null; // null = bye
+  }[];
 }
 ```
 
@@ -185,6 +192,22 @@ Spec:
   (< 5 matches) get a muted "small sample" hint.
 - Row click → `/matchups?legend=X` (highlights that row in the grid). Nice-to-have.
 
+### 5.5 `/players/:player` — Player match history
+
+- Reached by clicking a player's name on the leaderboard (opponent names on the page link the same way).
+- Header: player name, rank, points, W/L/D and attendance from the Leaderboard tab, plus a "Most played" legend
+  line, over that legend's splash art (ties on match count go to the legend used most recently); a back link to
+  the leaderboard.
+- **Week selector** above the table: an `All` button then one button per week `1 … totalWeeks`. Weeks the player has
+  no matches in are rendered but **disabled** (tooltip says whether the week hasn't happened yet or the player
+  missed it). Default = the player's most recent week with matches.
+- One **versus card** per match: `[player panel] [score] [opponent panel]`. Each panel shows the legend portrait,
+  the player's name (a link to their page) and the legend name underneath, over that legend's splash art from
+  `public/backgrounds/`. Panels are tinted by outcome: green = won, red = lost, light blue = both on a draw, grey
+  dashed = bye / no opponent. The middle shows `Wk · Rd`, the game score `2 : 1` (coloured per side). A summary line (`nW nL nD · pts`) for the selected
+  scope mirrors the Leaderboard's counting: byes are wins, no-game rounds are draws.
+- Unknown player → "Player not found" with a link back. Older snapshots without `matches` show an empty state.
+
 ## 6. Non-functional
 
 - Responsive 360px → 1440px+; tested on iPhone SE width, iPad, 1080p desktop.
@@ -239,7 +262,7 @@ For later: the workbook also contains three hidden sheets that the visible tabs 
 with the file anyway, so enabling them later is a parsing change, not an access change.
 
 - `Config` — key/value settings (`WorkbookPath`). A natural home for `TotalWeeks` / `MinWeeksForBestOf` (Q10).
-- `Match Results` — one row per match (week, round, both players' names, legends, game record, points; byes have an
-  empty player 2). Would give an exact `currentWeek` (`max(Week number)`) and a match explorer page.
+- `Match Results` — now read (see §2 and §5.5). `currentWeek` is still derived from attendance; switching it to
+  `max(Week number)` is a possible follow-up.
 - `Matchups` — now read (see §2). Per-cell counts are in; sample-size fading and a minimum-matches filter remain
   possible follow-ups.

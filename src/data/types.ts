@@ -37,6 +37,20 @@ export interface LegendWinrate {
   matches: number;
 }
 
+export interface MatchSide {
+  player: string;
+  legend: string;
+  record: string; // games inside the match, "W-L-D"
+  points: number; // 3 win, 1 draw, 0 loss
+}
+
+export interface MatchRow {
+  week: number;
+  round: number;
+  p1: MatchSide;
+  p2: MatchSide | null; // null = bye
+}
+
 export interface LeagueData {
   generatedAt: string;
   lastModified: string | null;
@@ -48,6 +62,7 @@ export interface LeagueData {
   matchupGrid: MatchupGrid;
   matchups?: MatchupPair[]; // from the hidden Matchups tab; absent in old snapshots
   legendWinrates: LegendWinrate[];
+  matches?: MatchRow[]; // from the hidden Match Results tab; absent in old snapshots
 }
 
 export type Eligibility = "eligible" | "pending" | "blocked";

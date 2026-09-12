@@ -11,6 +11,7 @@
     "refresh": "node scripts/read-leaderboard.mjs --out=public/data/league.json",
     "test": "node --test scripts/*.test.mjs",
     "portraits": "node scripts/sync-portraits.mjs",
+    "backgrounds": "node scripts/sync-backgrounds.mjs",
     "typecheck": "tsc -b"
   },
   "engines": {

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { normalise, deriveCurrentWeek, parseMatchupGrid } from "./normalise.mjs";
+import { normalise, deriveCurrentWeek, parseMatchupGrid, parseMatchResults } from "./normalise.mjs";
 
 const raw = JSON.parse(
   await readFile(new URL("./fixtures/workbook-2026-09-10.json", import.meta.url), "utf8")
@@ -82,4 +82,18 @@ test("legend winrates", () => {
 test("current week falls back to the largest match count", () => {
   assert.equal(deriveCurrentWeek([{ attendance: 0.6, wins: 5, losses: 3, draws: 1 }]), 3);
   assert.equal(deriveCurrentWeek([]), 0);
+});
+
+test("match results: names join first/last, byes have no second player, missing tab is empty", () => {
+  const rows = parseMatchResults([
+    ["Week number", "Round number", "Player 1 First Name", "Player 1 Last Name", "Player 1 Legend", "Player 1 Round Record", "Player 1 Points", "Player 2 First Name", "Player 2 Last Name", "Player 2 Legend", "Player 2 Round Record", "Player 2 Points"],
+    ["1", "1", "Lisa", "M", "Kai'Sa", "1-2-0", 0, "Aaron", "B", "Irelia", "2-1-0", 3],
+    ["2", "3", "Daniel", "C", "Ezreal", "2-0-0", 3, "", "", "", "0-0-0", ""],
+  ]);
+  assert.deepEqual(rows, [
+    { week: 1, round: 1, p1: { player: "Lisa M", legend: "Kai'Sa", record: "1-2-0", points: 0 }, p2: { player: "Aaron B", legend: "Irelia", record: "2-1-0", points: 3 } },
+    { week: 2, round: 3, p1: { player: "Daniel C", legend: "Ezreal", record: "2-0-0", points: 3 }, p2: null },
+  ]);
+  assert.deepEqual(parseMatchResults(null), []);
+  assert.deepEqual(data.matches, []); // the 2026-09-10 fixture predates the tab
 });

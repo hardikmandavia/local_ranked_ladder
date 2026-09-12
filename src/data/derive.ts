@@ -5,6 +5,8 @@ import type {
   LeagueData,
   LegendGroup,
   LegendWinrate,
+  MatchRow,
+  MatchSide,
   MatchupGrid,
   MatchupPair,
   RankedBestOf,
@@ -153,3 +155,54 @@ export function formatDate(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
+
+// ---- per-player match history ----
+export type MatchOutcome = "win" | "loss" | "draw" | "bye" | "none";
+
+export interface PlayerMatch {
+  week: number;
+  round: number;
+  me: MatchSide;
+  opponent: MatchSide | null; // null = bye
+  outcome: MatchOutcome;
+}
+
+// Points decide the outcome (3/1/0); a bye is any row without an opponent,
+// and a 0-point bye (no games recorded) is "none" — the Leaderboard tab
+// counts it as a draw.
+export function matchOutcome(me: MatchSide, opponent: MatchSide | null): MatchOutcome {
+  if (!opponent) return me.points > 0 ? "bye" : "none";
+  if (me.points >= 3) return "win";
+  if (me.points === 1) return "draw";
+  return "loss";
+}
+
+// Every match the player took part in (either side), oldest week first, rounds in order.
+export function playerMatches(matches: MatchRow[], player: string): PlayerMatch[] {
+  const out: PlayerMatch[] = [];
+  for (const m of matches) {
+    const side = m.p1.player === player ? m.p1 : m.p2?.player === player ? m.p2 : null;
+    if (!side) continue;
+    const opponent = side === m.p1 ? m.p2 : m.p1;
+    out.push({ week: m.week, round: m.round, me: side, opponent, outcome: matchOutcome(side, opponent) });
+  }
+  return out.sort((a, b) => a.week - b.week || a.round - b.round);
+}
+
+// The legend a player has played most; ties go to the one used most recently
+// (history is oldest first, so the highest index wins).
+export function mainLegend(history: PlayerMatch[]): string | null {
+  const count = new Map<string, number>();
+  const last = new Map<string, number>();
+  history.forEach((m, i) => {
+    count.set(m.me.legend, (count.get(m.me.legend) ?? 0) + 1);
+    last.set(m.me.legend, i);
+  });
+  let best: string | null = null;
+  for (const [legend, n] of count) {
+    if (best === null || n > count.get(best)! || (n === count.get(best) && last.get(legend)! > last.get(best)!)) best = legend;
+  }
+  return best;
+}
+
+export const playerPath = (player: string) => `/players/${encodeURIComponent(player)}`;

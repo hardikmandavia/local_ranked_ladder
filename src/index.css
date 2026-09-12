@@ -200,6 +200,108 @@ select {
 .mx td.cell { font-weight: 700; font-variant-numeric: tabular-nums; cursor: default; }
 .mx td.cell.na { color: var(--text-faint); font-weight: 400; }
 
+/* ---------- Player page hero ---------- */
+/* Splash art of the player's most-played legend (--art set inline), faded so
+   the text stays readable in both themes. */
+.player-hero {
+  position: relative;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background-color: var(--bg-elev);
+  overflow: hidden;
+}
+.player-hero.has-bg {
+  min-height: 11rem;
+  display: flex;
+  align-items: flex-end;
+  background-image: var(--art);
+  background-size: cover;
+  background-position: center 25%;
+}
+.player-hero.has-bg > * { position: relative; width: 100%; }
+.player-hero.has-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--bg-elev) 0%, color-mix(in srgb, var(--bg-elev) 82%, transparent) 40%, color-mix(in srgb, var(--bg-elev) 20%, transparent) 100%);
+}
+@media (min-width: 640px) {
+  .player-hero.has-bg { min-height: 14rem; }
+}
+
+/* ---------- Player page match cards ---------- */
+/* One card per match: [player panel] [score] [opponent panel]. Each panel
+   keeps the splash art of the legend that side played (--art set inline) and
+   is tinted by the outcome: green = won, red = lost, blue = draw, grey = bye. */
+.match-list { list-style: none; margin: 0; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.match-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.side-panel {
+  --tone: var(--text-faint);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--tone);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  color: var(--text);
+  text-decoration: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--tone) 55%, var(--bg-elev)) 0%, color-mix(in srgb, var(--tone) 30%, transparent) 100%),
+    var(--art, none);
+  background-size: cover;
+  background-position: center 25%;
+  background-repeat: no-repeat;
+  transition: filter 120ms;
+}
+.side-panel:hover { filter: brightness(1.12); }
+.side-right {
+  flex-direction: row-reverse;
+  text-align: right;
+  background-image:
+    linear-gradient(to left, color-mix(in srgb, var(--tone) 55%, var(--bg-elev)) 0%, color-mix(in srgb, var(--tone) 30%, transparent) 100%),
+    var(--art, none);
+}
+.side-panel.no-art { justify-content: center; text-align: center; background-image: none; background-color: color-mix(in srgb, var(--tone) 18%, var(--bg-elev)); border-style: dashed; }
+.side-panel.tone-win  { --tone: var(--color-win); }
+.side-panel.tone-loss { --tone: var(--color-loss); }
+.side-panel.tone-draw { --tone: #5bb7ff; }
+.side-panel.tone-none { --tone: var(--text-faint); }
+.side-avatar { flex: none; box-shadow: 0 0 0 2px var(--bg-elev); }
+.side-text { display: flex; flex-direction: column; min-width: 0; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+:root[data-theme="light"] .side-text { text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); }
+.side-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-legend { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:root[data-theme="dark"] .side-legend, :root:not([data-theme="light"]) .side-legend { color: #d3d8e3; }
+
+.match-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 4.5rem; padding: 0 0.25rem; }
+.match-round { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); white-space: nowrap; }
+.match-score { display: flex; align-items: baseline; gap: 0.3rem; font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.score-sep { color: var(--text-faint); font-size: 1.1rem; }
+.score-win { color: var(--color-win); }
+.score-loss { color: var(--color-loss); }
+.score-draw { color: #5bb7ff; }
+.score-none { color: var(--text-faint); }
+
+@media (max-width: 639px) {
+  .match-card { gap: 0.35rem; }
+  .side-panel { gap: 0.5rem; padding: 0.45rem 0.5rem; min-height: 3.75rem; }
+  .side-avatar { width: 32px !important; height: 32px !important; }
+  .side-avatar img, .side-avatar > span > span { width: 32px !important; height: 32px !important; }
+  .side-name { font-size: 0.85rem; }
+  .side-legend { font-size: 0.62rem; }
+  .match-mid { min-width: 3.25rem; }
+  .match-score { font-size: 1.2rem; }
+}
+
 /* ---------- Avatar ring ---------- */
 .ring-story {
   background: conic-gradient(from 210deg, #f5c86a, #e6b450, #3ec8c2, #7c5cff, #e6b450, #f5c86a);

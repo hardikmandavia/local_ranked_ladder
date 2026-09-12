@@ -3,7 +3,8 @@
 // LeagueData shape consumed by the site (see SPEC.md §4).
 //
 // Reads the four visible tabs plus the hidden `Matchups` tab (one row per
-// legend pair with a match count, which the visible pivot lacks).
+// legend pair with a match count, which the visible pivot lacks) and the hidden
+// `Match Results` tab (one row per match, which drives the per-player pages).
 
 export const TOTAL_WEEKS = 11;
 
@@ -117,6 +118,29 @@ export function parseMatchups(rows) {
     }));
 }
 
+// Hidden long-form tab, one row per match:
+//   Week number, Round number,
+//   Player 1 First Name, Player 1 Last Name, Player 1 Legend, Player 1 Round Record, Player 1 Points,
+//   Player 2 First Name, Player 2 Last Name, Player 2 Legend, Player 2 Round Record, Player 2 Points
+// Player names are `First Last` (matching the Leaderboard tab); the record is
+// the game score `W-L-D` inside the match. Byes have an empty player 2 and are
+// emitted with `p2: null`. Optional: older snapshots without the tab yield [].
+export function parseMatchResults(rows) {
+  if (!rows) return [];
+  const h = rows.findIndex((r) => String(r[0]).trim().toLowerCase() === "week number");
+  if (h < 0) throw new Error("Match Results: header row not found");
+  const name = (first, last) => [first, last].map((v) => String(v ?? "").trim()).filter(Boolean).join(" ");
+  const side = (r, i) => {
+    const player = name(r[i], r[i + 1]);
+    if (!player) return null;
+    return { player, legend: String(r[i + 2]).trim(), record: String(r[i + 3]).trim(), points: num(r[i + 4]) };
+  };
+  return rows
+    .slice(h + 1)
+    .filter((r) => !isBlank(r[0]) && !isBlank(r[2]))
+    .map((r) => ({ week: num(r[0]), round: num(r[1]), p1: side(r, 2), p2: side(r, 7) }));
+}
+
 // First player (sheet order) with 100% attendance has played every week;
 // each week is 3 matches. Falls back to the largest match count if nobody
 // has full attendance.
@@ -130,6 +154,7 @@ export function deriveCurrentWeek(leaderboard) {
 
 export function normalise(raw, { now = new Date() } = {}) {
   const leaderboard = parseLeaderboard(sheetRows(raw, "Leaderboard"));
+  const matches = parseMatchResults(sheetRows(raw, "Match Results", { optional: true }));
   return {
     generatedAt: now.toISOString(),
     lastModified: raw.lastModified ?? null,
@@ -141,5 +166,6 @@ export function normalise(raw, { now = new Date() } = {}) {
     matchupGrid: parseMatchupGrid(sheetRows(raw, "Matchups Grid")),
     matchups: parseMatchups(sheetRows(raw, "Matchups", { optional: true })),
     legendWinrates: parseLegendWinrates(sheetRows(raw, "Legend Winrates")),
+    matches,
   };
 }

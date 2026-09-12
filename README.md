@@ -5,7 +5,7 @@ The league workbook (a shared OneDrive `.xlsx`) is the single source of truth;
 a GitHub Actions job snapshots it daily into `public/data/league.json` and the
 site is served from GitHub Pages. See [SPEC.md](SPEC.md) for the full spec.
 
-Pages: **Leaderboard** · **Best Of** (top player per legend, with eligibility)
+Pages: **Leaderboard** (click a player for their week-by-week match history) · **Best Of** (top player per legend, with eligibility)
 · **Matchups** (legend-vs-legend win-rate matrix) · **Legends** (overall win rates).
 
 ## Develop
@@ -23,6 +23,7 @@ Microsoft credentials. Other scripts:
 | `npm run build` | Type-check and build to `dist/` (set `VITE_BASE=/repo-name/` for GitHub Pages) |
 | `npm test` | Unit tests for the workbook normaliser against the fixture in `scripts/fixtures/` |
 | `npm run portraits` | Regenerate `public/legends/*.jpg` from `assets/` |
+| `npm run backgrounds` | Regenerate `public/backgrounds/*.jpg` (player-page splash art) from `assets/backgrounds/legends/` |
 | `npm run refresh` | Download the live workbook and rewrite `public/data/league.json` (needs sign-in, below) |
 | `npm run read` | Print every sheet of the workbook (`--json`, `--sheet=NAME`) |
 
@@ -31,12 +32,22 @@ derivations, `useLeague` context), `src/components/`, `src/pages/`.
 
 ### Legend portraits
 
-Source art lives in `assets/<Legend name>/portrait.png`. `npm run portraits`
+Source art lives in `assets/portraits/<Legend name>.png`. `npm run portraits`
 (macOS, uses `sips`) resizes each one to a 192px JPEG in `public/legends/`
-named by the slug in `src/data/legends.json`. Folder names that differ from the
+named by the slug in `src/data/legends.json`. File names that differ from the
 workbook's legend names are mapped in `scripts/sync-portraits.mjs` (e.g.
 `Renata Glasc` → `Renata`). Legends without a file fall back to an initials
 placeholder.
+
+### Legend backgrounds
+
+Splash art lives in `assets/backgrounds/legends/<name>.<jpg|jpeg|png|webp|avif>`.
+`npm run backgrounds` (macOS, uses `sips`) resizes each one to a 1600px-wide
+JPEG in `public/backgrounds/<slug>.jpg`. Each row of a player's match history
+shows the art of the legend they used in that match; a legend without a file
+simply shows no art.
+Name aliases (`master yi`, `lilia`, `renata glasc`) are in
+`scripts/sync-backgrounds.mjs`.
 
 ## Reading the league workbook
 

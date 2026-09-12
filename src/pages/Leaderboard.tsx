@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useMemo, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useLeague } from "../data/useLeague";
-import { fixed, pct } from "../data/derive";
+import { fixed, pct, playerPath } from "../data/derive";
 import { SearchBox } from "../components/SearchBox";
 import { useHighlight } from "../components/useHighlight";
 import { BestOfBadge } from "../components/BestOfBadge";
@@ -69,7 +69,7 @@ export function Leaderboard() {
         <div>
           <h1 className="font-display text-2xl font-semibold">Leaderboard</h1>
           <p className="text-sm text-muted">
-            Top {QUALIFY_RANK} qualify for the end-of-season tournament · hover or tap a cell to highlight its row and column
+            Top {QUALIFY_RANK} qualify for the end-of-season tournament · click a player for their match history
           </p>
         </div>
         <SearchBox
@@ -116,9 +116,14 @@ export function Leaderboard() {
                 <td data-col={1} className="sticky-2 font-medium">
                   {/* phones: badges drop under the name so it isn't squeezed to nothing */}
                   <span className="flex max-w-[5.25rem] flex-col items-start gap-0.5 sm:max-w-none sm:flex-row sm:items-center sm:gap-1.5">
-                    <span className="min-w-0 max-w-full truncate sm:flex-1" title={r.player}>
+                    <Link
+                      to={playerPath(r.player)}
+                      className="min-w-0 max-w-full truncate hover:text-accent hover:underline sm:flex-1"
+                      title={`${r.player} · match history`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {r.player}
-                    </span>
+                    </Link>
                     {bestOfByPlayer.has(r.player) && (
                       <span className="flex items-center gap-1.5 self-end sm:self-auto">
                         {bestOfByPlayer.get(r.player)!.map((b) => (
