@@ -6,7 +6,7 @@ a GitHub Actions job snapshots it daily into `public/data/league.json` and the
 site is served from GitHub Pages. See [SPEC.md](SPEC.md) for the full spec.
 
 Pages: **Leaderboard** · **Best Of** (top player per legend, with eligibility)
-· **Matchups** (legend-vs-legend win-rate matrix) · **Legends** (overall win rates) · **App** (`/app`, info page for the SoloRift mobile app with store links).
+· **Matchups** (legend-vs-legend win-rate matrix) · **Legends** (overall win rates).
 
 ## Develop
 
